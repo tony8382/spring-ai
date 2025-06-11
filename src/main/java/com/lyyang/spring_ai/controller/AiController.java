@@ -9,6 +9,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +25,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiController {
     private final ChatModel chatModel;
+
+    @Value("classpath:prompt.st")
+    private Resource templateResource;
 
     private static String apply(ChatResponse response) {
         return response.getResult() != null && response.getResult().getOutput() != null && response.getResult().getOutput().getText() != null ? response.getResult().getOutput().getText() : "";
@@ -48,10 +53,9 @@ public class AiController {
 
     }
 
-    @GetMapping(value = "/template1", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/template1")
     public Flux<String> template1(@RequestParam String llm) {
-        String template = "請問{llm}目前有哪些模型，各有甚麼特殊能力";
-        PromptTemplate promptTemplate = new PromptTemplate(template);
+        PromptTemplate promptTemplate = new PromptTemplate(templateResource);
         Prompt prompt = promptTemplate.create(Map.of("llm", llm));
 
         return chatModel.stream(prompt).map(AiController::apply);
