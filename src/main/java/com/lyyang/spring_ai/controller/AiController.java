@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
@@ -55,6 +55,12 @@ public class AiController {
                         codeResource
                 )
                 .map(AiController::getResponseText);
+    }
+
+    @PostMapping(value = "/imagequery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> imageQuery(@RequestPart FilePart file, @RequestPart String message) {
+        return aiService.imageQuery(file, message);
     }
 
 }

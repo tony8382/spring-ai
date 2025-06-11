@@ -1,6 +1,7 @@
 package com.lyyang.spring_ai.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -8,13 +9,18 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +48,36 @@ public class AiService {
         Prompt prompt = promptTemplate.create(map);
 
         return chatModel.stream(prompt);
+    }
+
+    public Flux<String> imageQuery(FilePart file, String message) {
+        return file.content()
+                .reduce((dataBuffer1, dataBuffer2) -> {
+                    dataBuffer1.write(dataBuffer2);
+                    return dataBuffer1;
+                })
+                .flatMap(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    ByteArrayResource resource = new ByteArrayResource(bytes) {
+                        @Override
+                        public String getFilename() {
+                            return file.filename();
+                        }
+                    };
+
+                    Media media = new Media(
+                            MimeTypeUtils.parseMimeType(Objects.requireNonNull(file.headers().getContentType()).toString()),
+                            resource
+                    );
+
+                    return ChatClient.create(chatModel).prompt()
+                            .user(u -> u.text(message).media(media))
+                            .stream()
+                            .content()
+                            .collectList();
+                })
+                .flatMapMany(Flux::fromIterable);
     }
 
 }
