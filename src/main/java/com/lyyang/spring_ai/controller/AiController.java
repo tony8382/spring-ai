@@ -23,7 +23,7 @@ public class AiController {
 
     private final AiService aiService;
 
-    private static String apply(ChatResponse response) {
+    private static String getResponseText(ChatResponse response) {
         return response.getResult() != null && response.getResult().getOutput() != null && response.getResult().getOutput().getText() != null ? response.getResult().getOutput().getText() : "";
     }
 
@@ -35,7 +35,7 @@ public class AiController {
     @GetMapping(value = "/chatModel", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatModel(String prompt) {
         return aiService.chatWithContext(prompt)
-                .map(AiController::apply);
+                .map(AiController::getResponseText);
     }
 
     @GetMapping(value = "/template1")
@@ -44,7 +44,7 @@ public class AiController {
                         Map.of("llm", llm),
                         promptResource
                 )
-                .map(AiController::apply);
+                .map(AiController::getResponseText);
 
     }
 
@@ -54,7 +54,7 @@ public class AiController {
                         Map.of("language", language, "methodName", methodName),
                         codeResource
                 )
-                .map(AiController::apply);
+                .map(AiController::getResponseText);
     }
 
 }

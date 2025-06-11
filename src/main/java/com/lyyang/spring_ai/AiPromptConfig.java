@@ -11,11 +11,11 @@ public class AiPromptConfig {
 
     @Bean
     public Resource promptResource() {
-        return new ClassPathResource("prompt.st");
+        return new ClassPathResource("templates/prompt.txt");
     }
 
     @Bean
     public Resource codeResource() {
-        return new ClassPathResource("code.txt");
+        return new ClassPathResource("templates/code.txt");
     }
 }

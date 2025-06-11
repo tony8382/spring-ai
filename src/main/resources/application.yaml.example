@@ -7,3 +7,8 @@ spring:
       chat:
         options:
           model: llama-3.3-70b-versatile
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
